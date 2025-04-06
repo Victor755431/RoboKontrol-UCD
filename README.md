@@ -11,6 +11,8 @@ Auteurs: Rémy Brévart, Victor De Crevoisier, Hippolyte Foulongne, Jacques Seri
 
 - Cloner le dépôt dans le dossier de votre choix: `git clone https://github.com/KirrimK/RoboKontrol`
 - Installer les librairies python requises: `pip install ivy-python lxml PyQt5 pyserial`
+- Installer eCAL. Aller sur [ce site](https://eclipse-ecal.github.io/ecal/stable/getting_started/setup.html), et suivre les instructions.
+- Exécuter le fichier wheel pour les bindings Pythons de Ecal. Voir [ce site](https://eclipse-ecal.github.io/ecal/releases/ecal_5_13_3.html#fa-python-python-binding)
 - Sous Linux, il peut être nécessaire d'installer le paquet QtSvg séparément: `sudo apt-get install python3-pyqt5.qtsvg` (sous Ubuntu)
 - Sur les installations python >= 3.9, il est possible que la librairie Ivy fasse toujours appel à une fonction dépréciée de python 3.8 qui n'existe plus. Si ce problème vous arrive, référez-vous à ce lien: [https://gitlab.com/ivybus/ivy-python/-/issues/1](https://gitlab.com/ivybus/ivy-python/-/issues/1)
 
