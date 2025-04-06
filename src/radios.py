@@ -1,7 +1,7 @@
 import serial
 import threading
 from time import time, gmtime, sleep
-# from ivy.std_api import IvyStart, IvyStop, IvyInit, IvyBindMsg, IvySendMsg
+from ivy.std_api import IvyStart, IvyStop, IvyInit, IvyBindMsg, IvySendMsg
 import ecal.core.core as ecal_core
 from ecal.core.publisher import ProtoPublisher, StringPublisher
 from ecal.core.subscriber import ProtoSubscriber, StringSubscriber
@@ -239,53 +239,50 @@ class serialRadio(Radio):
         self.serialObject.write (cmd.encode ('utf-8'))
 
 
-# class ivyRadio (Radio):
-#     """Classe de radio permettant la connection à un bus Ivy. Servait à des fins de debug de l'IHM avant le passage au serial"""
-#     def __init__(self):
-#         Radio.__init__(self)
-#         self.nom = 'Radio'
-#         IvyInit (self.nom,self.nom+" is ready!")
-#         self.bus = "127.255.255.255:2010"
-#         #Definition des messages et commandes Ivy
-#         self.messages['ACTU_DECL']='ActuatorDeclare {} {} {} {} {} {} {}'#B indicatifRobot indicatifEquipement valMin valMax step droits unité 
-#         self.messages['POS_REG']='PosReport {} {} {} {}'#R indicatifRobot x y theta
-#         self.messages['CAPT_REG']='CaptReport {} {} {}'#C indicatifRobot indicatifCapteur valeur
+class ivyRadio (Radio):
+    """Classe de radio permettant la connection à un bus Ivy. Servait à des fins de debug de l'IHM avant le passage au serial"""
+    def __init__(self):
+        Radio.__init__(self)
+        self.nom = 'Radio'
+        IvyInit (self.nom,self.nom+" is ready!")
+        self.bus = "127.255.255.255:2010"
+        #Definition des messages et commandes Ivy
+        self.messages['ACTU_DECL']='ActuatorDeclare {} {} {} {} {} {} {}'#B indicatifRobot indicatifEquipement valMin valMax step droits unité 
+        self.messages['POS_REG']='PosReport {} {} {} {}'#R indicatifRobot x y theta
+        self.messages['CAPT_REG']='CaptReport {} {} {}'#C indicatifRobot indicatifCapteur valeur
+        self.messages["POS_CMD"]="PosCommand {} {} {}\n"#P indicatifRobot  x   y
+        self.messages["SPEED_CMD"]="SpeedCommand {} {} {} {}\n"#S indicatifRobot vX vY vThetaself.messages["POS_CMD"]="P {} {} {}\n"#P indicatifRobot x y
+        self.messages["POS_ORIENT_CMD"] = "PosOrientCommand {} {} {} {}\n" #O indicatifRobot  x   y   theta
+        self.messages["ACTUATOR_CMD"] = "ActuatorCommand {} {} {}\n"#A indicatifRobot indicatifEquipement valeur
+        self.messages["STOP_BUTTON_CMD"] = "Emmergency {} \n"#E indicatifRobot
+        self.messages["KILL_CMD"] = "Kill {} \n"#K indicatifRobot
+        self.messages["DESCR_CMD"] = "DecriptionCommand {} \n"#D indicatifRobot
+        IvyBindMsg (self.onBind1, self.messages["POS_REG"].format ('(.+)','(.+)','(.+)','(.+)'))
+        IvyBindMsg (self.onBind2, self.messages["CAPT_REG"].format('(.+)','(.+)','(.+)'))
+        IvyBindMsg (self.onBind3, self.messages["ACTU_DECL"].format('(.+)','(.+)','(.+)','(.+)','(.+)','(.+)','(.+)'))
+    def onBind1 (self, sender, rid, x, y, theta):
+        """Fonction servant à se débarasser de l'objet sender donné par le bind Ivy"""
+        self.on_posreg(rid, x, y, theta)
+    def onBind2 (self, sender, rid, sid, val):
+        """Fonction servant à se débarasser de l'objet sender donné par le bind Ivy"""
+        self.on_captreg(rid, sid, val)
+    def onBind3 (self, sender, rid, sid, mini, maxi, step, droits, unit):
+        """Fonction servant à se débarasser de l'objet sender donné par le bind Ivy"""
+        self.on_actudecl(rid, sid, mini, maxi, step, droits, unit)
+    def send_cmd (self,cmd):
+        """Envoie du texte vers le bus Ivy et le stocke optionnellement sur les tampons
+        Input : _ cmd (str) : Le message à envoyer"""
+        self.saveSent(cmd)
+        IvySendMsg (cmd)
 
-#         self.messages["POS_CMD"]="PosCommand {} {} {}\n"#P indicatifRobot  x   y
-#         self.messages["SPEED_CMD"]="SpeedCommand {} {} {} {}\n"#S indicatifRobot vX vY vThetaself.messages["POS_CMD"]="P {} {} {}\n"#P indicatifRobot x y
-#         self.messages["POS_ORIENT_CMD"] = "PosOrientCommand {} {} {} {}\n" #O indicatifRobot  x   y   theta
-#         self.messages["ACTUATOR_CMD"] = "ActuatorCommand {} {} {}\n"#A indicatifRobot indicatifEquipement valeur
-#         self.messages["STOP_BUTTON_CMD"] = "Emmergency {} \n"#E indicatifRobot
-#         self.messages["KILL_CMD"] = "Kill {} \n"#K indicatifRobot
-#         self.messages["DESCR_CMD"] = "DecriptionCommand {} \n"#D indicatifRobot
+    def start (self):
+        """Démare la radio"""
+        IvyStart (self.bus)
+        logging.getLogger('Ivy').setLevel(logging.WARN)
 
-#         IvyBindMsg (self.onBind1, self.messages["POS_REG"].format ('(.+)','(.+)','(.+)','(.+)'))
-#         IvyBindMsg (self.onBind2, self.messages["CAPT_REG"].format('(.+)','(.+)','(.+)'))
-#         IvyBindMsg (self.onBind3, self.messages["ACTU_DECL"].format('(.+)','(.+)','(.+)','(.+)','(.+)','(.+)','(.+)'))
-#     def onBind1 (self, sender, rid, x, y, theta):
-#         """Fonction servant à se débarasser de l'objet sender donné par le bind Ivy"""
-#         self.on_posreg(rid, x, y, theta)
-#     def onBind2 (self, sender, rid, sid, val):
-#         """Fonction servant à se débarasser de l'objet sender donné par le bind Ivy"""
-#         self.on_captreg(rid, sid, val)
-#     def onBind3 (self, sender, rid, sid, mini, maxi, step, droits, unit):
-#         """Fonction servant à se débarasser de l'objet sender donné par le bind Ivy"""
-#         self.on_actudecl(rid, sid, mini, maxi, step, droits, unit)
-
-#     def send_cmd (self,cmd):
-#         """Envoie du texte vers le bus Ivy et le stocke optionnellement sur les tampons
-#         Input : _ cmd (str) : Le message à envoyer"""
-#         self.saveSent(cmd)
-#         IvySendMsg (cmd)
-
-#     def start (self):
-#         """Démare la radio"""
-#         IvyStart (self.bus)
-#         logging.getLogger('Ivy').setLevel(logging.WARN)
-
-#     def stop (self, *args):
-#         """Appelé automatiquement à l'arrêt du programme. Enlève la radio du bus Ivy."""
-#         IvyStop()
+    def stop (self, *args):
+        """Appelé automatiquement à l'arrêt du programme. Enlève la radio du bus Ivy."""
+        IvyStop()
 
 
 class ecalRadio(Radio):

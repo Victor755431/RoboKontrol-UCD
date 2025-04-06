@@ -4,7 +4,7 @@ import window
 import sys
 import backend as ben
 import time
-from radios import serialRadio, ecalRadio
+from radios import serialRadio, ecalRadio, ivyRadio
 
     
 
@@ -15,6 +15,7 @@ if __name__ == "__main__":
     if len (sys.argv) > 1 and sys.argv[1] in ["ivy", "Ivy"]:
         print("Mode Ivy démarré.")
         radio = ivyRadio()
+        time.sleep(2)
 
     elif len (sys.argv) > 1 and sys.argv[1].lower() =="ecal":
         print("Mode Ecal démarré.")
